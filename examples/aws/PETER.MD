@@ -320,22 +320,28 @@
     * If you get any errors during the Stage 2 apply related to the creation of the EC2 instances or the ALB, you can try running `terraform apply` a second time.  
         * If the second apply is successful, then the user-data script on the primary EC2 instance should be able to get out of the curl loop and create the initial site admin user and organization.  
     * **NOTE: You do not need to visit the PTFE admin console at port 8800 when deploying PTFE with the process given on this branch of this repository.**  
-    * Destroy  
-        * `terraform destroy`  
-        * NOTE: Takes about 10 minutes  
-    * Changes  
-        * I added a resource to create a ssh_key_pair  
-            * ```  
-                resource "aws_key_pair" "ec2_key" {  
-                  key_name   = "${var.namespace}-ec2-key"  
-                  public_key = "<key>"  
-                }  
+* Destroy  
+    * `terraform destroy`  
+    * NOTE: Takes about 10 minutes  
+* Changes  
+    * I added a resource to create a ssh_key_pair  
+        * ```  
+            resource "aws_key_pair" "ec2_key" {  
+              key_name   = "${var.namespace}-ec2-key"  
+              public_key = "<key>"  
+            }  
+            ```  
   
-        * Added the following to module database/main.tf aws_db_instance.ptfe  
-            * ```  
-                changes  
-                  skip_final_snapshot       = "true"  
-                  backup_retention_period   = "0" # disable backup  
+    * Added the following to module database/main.tf aws_db_instance.ptfe  
+        * ```  
+            changes  
+              skip_final_snapshot       = "true"  
+              backup_retention_period   = "0" # disable backup  
+  
+* Troubleshooting  
+    * You can tail the audit log and watch it as you click around the TFE UI.  Just log into your server and run  
+        * `docker logs -f ptfe_atlas | grep “Audit Log”`  
+        * `docker logs ptfe_atlas --since 5m | grep “Audit Log”`  
   
 ## **A Comment About Certs**  
   
