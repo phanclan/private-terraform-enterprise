@@ -20,4 +20,7 @@ resource "aws_db_instance" "ptfe" {
   multi_az                  = "${var.database_multi_az}"
   vpc_security_group_ids    = ["${var.vpc_security_group_ids}"]
   final_snapshot_identifier = "${var.namespace}-db-instance-final-snapshot"
+  # changes
+  skip_final_snapshot       = "true"
+  backup_retention_period   = "0" # disable backup
 }

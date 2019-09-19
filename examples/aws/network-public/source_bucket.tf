@@ -2,13 +2,13 @@ resource "aws_kms_key" "s3" {
   description             = "Key for S3 bucket encryption"
   deletion_window_in_days = 10
 
-  tags {
+  tags = {
     name = "ptfe-s3-bucket-key"
   }
 }
 
 resource "aws_kms_alias" "s3" {
-  name = "alias/${var.namespace}-s3-key"
+  name          = "alias/${var.namespace}-s3-key"
   target_key_id = "${aws_kms_key.s3.key_id}"
 }
 
@@ -29,7 +29,7 @@ resource "aws_s3_bucket" "bucket" {
     enabled = true
   }
 
-  tags {
+  tags = {
     Name = "${var.bucket_name}"
   }
 }

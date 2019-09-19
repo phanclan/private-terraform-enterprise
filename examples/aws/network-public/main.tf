@@ -14,7 +14,7 @@ resource "aws_vpc" "main" {
   cidr_block           = "${var.cidr_block}"
   enable_dns_hostnames = true
 
-  tags {
+  tags = {
     Name = "${var.namespace}-vpc"
   }
 }
@@ -22,7 +22,7 @@ resource "aws_vpc" "main" {
 resource "aws_internet_gateway" "main" {
   vpc_id = "${aws_vpc.main.id}"
 
-  tags {
+  tags = {
     Name = "${var.namespace}-internet-gateway"
   }
 }
@@ -35,24 +35,24 @@ resource "aws_route_table" "main" {
     gateway_id = "${aws_internet_gateway.main.id}"
   }
 
-  tags {
+  tags = {
     Name = "${var.namespace}-route-table"
   }
 }
 
 locals {
   segmented_cidr = "${split("/", var.cidr_block)}"
-  address = "${split(".", local.segmented_cidr[0])}"
-  bits = "${local.segmented_cidr[1]}"
+  address        = "${split(".", local.segmented_cidr[0])}"
+  bits           = "${local.segmented_cidr[1]}"
 }
 
 resource "aws_subnet" "main" {
   count             = "${var.subnet_count}"
-  cidr_block = "${format("%s.%s.%d.%s/%d", local.address[0], local.address[1], count.index+1, local.address[3], local.bits + (32 - local.bits) / 2)}"
+  cidr_block        = "${format("%s.%s.%d.%s/%d", local.address[0], local.address[1], count.index+1, local.address[3], local.bits + (32 - local.bits) / 2)}"
   vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "${element(data.aws_availability_zones.available.names, count.index % 2)}"
 
-  tags {
+  tags = {
     Name = "${var.namespace}-subnet-${element(data.aws_availability_zones.available.names, count.index)}"
   }
 

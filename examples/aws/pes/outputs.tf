@@ -3,17 +3,17 @@ output "ptfe_fqdn" {
 }
 
 output "ptfe_public_ip" {
-  value = "${aws_instance.primary.public_ip}"
+  value = "${aws_instance.primary.*.public_ip}"
 }
 
 output "ptfe_private_ip" {
-  value = "${aws_instance.primary.private_ip}"
+  value = "${aws_instance.primary.*.private_ip}"
 }
 
 output "ptfe_public_dns" {
-  value = "${aws_instance.primary.public_dns}"
+  value = "${aws_instance.primary.*.public_dns}"
 }
 
 output "ptfe_private_dns" {
-  value = "${aws_instance.primary.private_dns}"
+  value = "${aws_instance.primary.*.private_dns}"
 }

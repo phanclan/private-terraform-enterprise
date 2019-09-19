@@ -2,14 +2,14 @@
 
 ### EC2 instances
 resource "aws_instance" "primary" {
-  count                  = 1
-  ami                    = "${var.aws_instance_ami}"
-  instance_type          = "${var.aws_instance_type}"
-  subnet_id              = "${element(var.ptfe_subnet_ids, count.index)}"
-  vpc_security_group_ids = ["${var.vpc_security_group_ids}"]
-  key_name               = "${var.ssh_key_name}"
-  user_data              = "${var.user_data}"
-  iam_instance_profile   = "${aws_iam_instance_profile.ptfe.name}"
+  count                       = 1
+  ami                         = "${var.aws_instance_ami}"
+  instance_type               = "${var.aws_instance_type}"
+  subnet_id                   = "${element(var.ptfe_subnet_ids, count.index)}"
+  vpc_security_group_ids      = ["${var.vpc_security_group_ids}"]
+  key_name                    = "${var.ssh_key_name}"
+  user_data                   = "${var.user_data}"
+  iam_instance_profile        = "${aws_iam_instance_profile.ptfe.name}"
   associate_public_ip_address = "${var.public_ip}"
 
   root_block_device {
@@ -26,6 +26,7 @@ resource "aws_instance" "primary" {
 
 resource "null_resource" "delay_secondary" {
   count = "${var.create_second_instance}"
+
   provisioner "local-exec" {
     command = "sleep 300"
   }
@@ -34,14 +35,14 @@ resource "null_resource" "delay_secondary" {
 }
 
 resource "aws_instance" "secondary" {
-  count                  = "${var.create_second_instance}"
-  ami                    = "${var.aws_instance_ami}"
-  instance_type          = "${var.aws_instance_type}"
-  subnet_id              = "${element(var.ptfe_subnet_ids, count.index)}"
-  vpc_security_group_ids = ["${var.vpc_security_group_ids}"]
-  key_name               = "${var.ssh_key_name}"
-  user_data              = "${var.user_data}"
-  iam_instance_profile   = "${aws_iam_instance_profile.ptfe.name}"
+  count                       = "${var.create_second_instance}"
+  ami                         = "${var.aws_instance_ami}"
+  instance_type               = "${var.aws_instance_type}"
+  subnet_id                   = "${element(var.ptfe_subnet_ids, count.index)}"
+  vpc_security_group_ids      = ["${var.vpc_security_group_ids}"]
+  key_name                    = "${var.ssh_key_name}"
+  user_data                   = "${var.user_data}"
+  iam_instance_profile        = "${aws_iam_instance_profile.ptfe.name}"
   associate_public_ip_address = "${var.public_ip}"
 
   root_block_device {
@@ -90,8 +91,8 @@ resource "aws_route53_record" "pes" {
   type    = "A"
 
   alias {
-    name    = "${aws_lb.ptfe.dns_name}"
-    zone_id = "${aws_lb.ptfe.zone_id}"
+    name                   = "${aws_lb.ptfe.dns_name}"
+    zone_id                = "${aws_lb.ptfe.zone_id}"
     evaluate_target_health = false
   }
 }
@@ -106,20 +107,19 @@ resource "aws_lb" "ptfe" {
   tags {
     owner = "${var.owner}"
   }
-
 }
 
 resource "aws_lb_target_group" "ptfe_443" {
-  name               = "${var.namespace}-alb-tg-443"
-  port               = 443
-  protocol           = "HTTPS"
-  vpc_id             = "${var.vpc_id}"
-  target_type        = "instance"
+  name        = "${var.namespace}-alb-tg-443"
+  port        = 443
+  protocol    = "HTTPS"
+  vpc_id      = "${var.vpc_id}"
+  target_type = "instance"
 
   health_check {
-    path      = "/_health_check"
-    protocol  = "HTTPS"
-    matcher   = "200"
+    path     = "/_health_check"
+    protocol = "HTTPS"
+    matcher  = "200"
   }
 
   tags {
@@ -128,16 +128,16 @@ resource "aws_lb_target_group" "ptfe_443" {
 }
 
 resource "aws_lb_target_group" "ptfe_8800" {
-  name               = "${var.namespace}-alb-tg-8800"
-  port               = 8800
-  protocol           = "HTTPS"
-  vpc_id             = "${var.vpc_id}"
-  target_type        = "instance"
+  name        = "${var.namespace}-alb-tg-8800"
+  port        = 8800
+  protocol    = "HTTPS"
+  vpc_id      = "${var.vpc_id}"
+  target_type = "instance"
 
   health_check {
-  path      = "/authenticate"
-  protocol  = "HTTPS"
-  matcher   = "200"
+    path     = "/authenticate"
+    protocol = "HTTPS"
+    matcher  = "200"
   }
 
   tags {
@@ -146,47 +146,45 @@ resource "aws_lb_target_group" "ptfe_8800" {
 }
 
 resource "aws_lb_listener" "ptfe-443" {
-  load_balancer_arn   = "${aws_lb.ptfe.arn}"
-  port                = "443"
-  protocol            = "HTTPS"
-  ssl_policy          = "ELBSecurityPolicy-2016-08"
-  certificate_arn     = "${var.ssl_certificate_arn == "" ? aws_acm_certificate.cert.arn : var.ssl_certificate_arn}"
+  load_balancer_arn = "${aws_lb.ptfe.arn}"
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${var.ssl_certificate_arn == "" ? aws_acm_certificate.cert.arn : var.ssl_certificate_arn}"
 
   default_action {
-    type              = "forward"
-    target_group_arn  = "${aws_lb_target_group.ptfe_443.arn}"
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.ptfe_443.arn}"
   }
 
   depends_on = ["aws_acm_certificate_validation.cert"]
-
 }
 
 resource "aws_lb_listener" "ptfe-8800" {
-  load_balancer_arn   = "${aws_lb.ptfe.arn}"
-  port                = "8800"
-  protocol            = "HTTPS"
-  ssl_policy          = "ELBSecurityPolicy-2016-08"
-  certificate_arn     = "${var.ssl_certificate_arn == "" ? aws_acm_certificate.cert.arn : var.ssl_certificate_arn}"
+  load_balancer_arn = "${aws_lb.ptfe.arn}"
+  port              = "8800"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = "${var.ssl_certificate_arn == "" ? aws_acm_certificate.cert.arn : var.ssl_certificate_arn}"
 
   default_action {
-    type              = "forward"
-    target_group_arn  = "${aws_lb_target_group.ptfe_8800.arn}"
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.ptfe_8800.arn}"
   }
 
   depends_on = ["aws_acm_certificate_validation.cert"]
-
 }
 
 resource "aws_lb_target_group_attachment" "ptfe_443" {
-  target_group_arn    = "${aws_lb_target_group.ptfe_443.arn}"
-  target_id           = "${aws_instance.primary.id}"
-  port                = 443
+  target_group_arn = "${aws_lb_target_group.ptfe_443.arn}"
+  target_id        = "${aws_instance.primary.id}"
+  port             = 443
 }
 
 resource "aws_lb_target_group_attachment" "ptfe_8800" {
-  target_group_arn    = "${aws_lb_target_group.ptfe_8800.arn}"
-  target_id           = "${aws_instance.primary.id}"
-  port                = 8800
+  target_group_arn = "${aws_lb_target_group.ptfe_8800.arn}"
+  target_id        = "${aws_instance.primary.id}"
+  port             = 8800
 }
 
 ### S3 bucket resorces
@@ -216,7 +214,6 @@ resource "aws_s3_bucket" "pes" {
   tags {
     Name = "${var.ptfe_bucket_name}"
   }
-
 }
 
 # IAM resources

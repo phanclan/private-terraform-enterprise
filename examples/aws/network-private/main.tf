@@ -11,7 +11,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "main" {
-  cidr_block  = "${var.cidr_block}"
+  cidr_block           = "${var.cidr_block}"
   enable_dns_hostnames = true
 
   tags {
@@ -28,7 +28,7 @@ resource "aws_internet_gateway" "main" {
 }
 
 resource "aws_eip" "ngw" {
-  vpc      = true
+  vpc        = true
   depends_on = ["aws_internet_gateway.main"]
 }
 
@@ -38,8 +38,8 @@ resource "aws_nat_gateway" "ngw" {
 }
 
 resource "aws_vpc_endpoint" "s3" {
-  vpc_id       = "${aws_vpc.main.id}"
-  service_name = "com.amazonaws.us-east-1.s3"
+  vpc_id          = "${aws_vpc.main.id}"
+  service_name    = "com.amazonaws.us-east-1.s3"
   route_table_ids = ["${aws_route_table.private.id}"]
 }
 
@@ -71,13 +71,13 @@ resource "aws_route_table" "private" {
 
 locals {
   segmented_cidr = "${split("/", var.cidr_block)}"
-  address = "${split(".", local.segmented_cidr[0])}"
-  bits = "${local.segmented_cidr[1]}"
+  address        = "${split(".", local.segmented_cidr[0])}"
+  bits           = "${local.segmented_cidr[1]}"
 }
 
 resource "aws_subnet" "private" {
   count             = "${var.subnet_count}"
-  cidr_block = "${format("%s.%s.%d.%s/%d", local.address[0], local.address[1], count.index+1, local.address[3], local.bits + (32 - local.bits) / 2)}"
+  cidr_block        = "${format("%s.%s.%d.%s/%d", local.address[0], local.address[1], count.index+1, local.address[3], local.bits + (32 - local.bits) / 2)}"
   vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "${element(data.aws_availability_zones.available.names, count.index % 2)}"
 
@@ -89,7 +89,7 @@ resource "aws_subnet" "private" {
 }
 
 resource "aws_subnet" "public" {
-  cidr_block = "${format("%s.%s.%d.%s/%d", local.address[0], local.address[1], var.subnet_count + 1, local.address[3], local.bits + (32 - local.bits) / 2)}"
+  cidr_block        = "${format("%s.%s.%d.%s/%d", local.address[0], local.address[1], var.subnet_count + 1, local.address[3], local.bits + (32 - local.bits) / 2)}"
   vpc_id            = "${aws_vpc.main.id}"
   availability_zone = "${element(data.aws_availability_zones.available.names, count.index % 2)}"
 
@@ -161,11 +161,11 @@ resource "aws_security_group" "main" {
 
 ### EC2 instance
 resource "aws_instance" "bastion" {
-  ami                    = "ami-0565af6e282977273"
-  instance_type          = "t2.micro"
-  subnet_id              = "${aws_subnet.public.id}"
-  vpc_security_group_ids = ["${aws_security_group.main.id}"]
-  key_name               = "${var.ssh_key_name}"
+  ami                         = "ami-0565af6e282977273"
+  instance_type               = "t2.micro"
+  subnet_id                   = "${aws_subnet.public.id}"
+  vpc_security_group_ids      = ["${aws_security_group.main.id}"]
+  key_name                    = "${var.ssh_key_name}"
   associate_public_ip_address = "true"
 
   root_block_device {
@@ -174,6 +174,6 @@ resource "aws_instance" "bastion" {
   }
 
   tags {
-    Name  = "${var.namespace}-bastion"
+    Name = "${var.namespace}-bastion"
   }
 }

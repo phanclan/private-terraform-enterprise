@@ -7,12 +7,15 @@ variable "owner" {}
 variable "ttl" {}
 variable "user_data" {}
 variable "vpc_id" {}
+
 variable "ptfe_subnet_ids" {
   type = "list"
 }
+
 variable "alb_subnet_ids" {
   type = "list"
 }
+
 variable "vpc_security_group_ids" {}
 variable "zone_id" {}
 variable "alb_internal" {}
