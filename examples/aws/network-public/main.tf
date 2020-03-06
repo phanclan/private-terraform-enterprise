@@ -1,9 +1,9 @@
 terraform {
-  required_version = ">= 0.11.13"
+  required_version = ">= 0.12.6"
 }
 
 provider "aws" {
-  region = "${var.aws_region}"
+  region = var.aws_region
 }
 
 data "aws_availability_zones" "available" {
@@ -11,7 +11,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "main" {
-  cidr_block           = "${var.cidr_block}"
+  cidr_block           = var.cidr_block
   enable_dns_hostnames = true
 
   tags = {
@@ -20,7 +20,7 @@ resource "aws_vpc" "main" {
 }
 
 resource "aws_internet_gateway" "main" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   tags = {
     Name = "${var.namespace}-internet-gateway"
@@ -28,11 +28,11 @@ resource "aws_internet_gateway" "main" {
 }
 
 resource "aws_route_table" "main" {
-  vpc_id = "${aws_vpc.main.id}"
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.main.id}"
+    gateway_id = aws_internet_gateway.main.id
   }
 
   tags = {
@@ -43,14 +43,14 @@ resource "aws_route_table" "main" {
 locals {
   segmented_cidr = "${split("/", var.cidr_block)}"
   address        = "${split(".", local.segmented_cidr[0])}"
-  bits           = "${local.segmented_cidr[1]}"
+  bits           = local.segmented_cidr[1]
 }
 
 resource "aws_subnet" "main" {
-  count             = "${var.subnet_count}"
-  cidr_block        = "${format("%s.%s.%d.%s/%d", local.address[0], local.address[1], count.index+1, local.address[3], local.bits + (32 - local.bits) / 2)}"
-  vpc_id            = "${aws_vpc.main.id}"
-  availability_zone = "${element(data.aws_availability_zones.available.names, count.index % 2)}"
+  count             = var.subnet_count
+  cidr_block        = format("%s.%s.%d.%s/%d", local.address[0], local.address[1], count.index+1, local.address[3], local.bits + (32 - local.bits) / 2)
+  vpc_id            = aws_vpc.main.id
+  availability_zone = element(data.aws_availability_zones.available.names, count.index % 2)
 
   tags = {
     Name = "${var.namespace}-subnet-${element(data.aws_availability_zones.available.names, count.index)}"
@@ -60,15 +60,15 @@ resource "aws_subnet" "main" {
 }
 
 resource "aws_route_table_association" "main" {
-  count          = "${var.subnet_count}"
-  route_table_id = "${aws_route_table.main.id}"
-  subnet_id      = "${element(aws_subnet.main.*.id, count.index)}"
+  count          = var.subnet_count
+  route_table_id = aws_route_table.main.id
+  subnet_id      = element(aws_subnet.main.*.id, count.index)
 }
 
 resource "aws_security_group" "main" {
   name        = "${var.namespace}-sg"
   description = "${var.namespace} security group"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     protocol  = -1
