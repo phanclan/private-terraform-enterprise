@@ -1,4 +1,4 @@
-# PTFE Production External Services Module
+# TFE Production External Services Module
 
 ### EC2 instances
 resource "aws_instance" "primary" {
