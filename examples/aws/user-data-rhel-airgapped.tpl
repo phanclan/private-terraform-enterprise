@@ -17,7 +17,7 @@ cat > /etc/replicated.conf <<EOF
   "DaemonAuthenticationType": "password",
   "DaemonAuthenticationPassword": "${ptfe_admin_password}",
   "TlsBootstrapType": "self-signed",
-  "ImportSettingsFrom": "/home/ec2-user/ptfe-settings.json",
+  "ImportSettingsFrom": "/home/ec2-user/tfe-settings.json",
   "LicenseFileLocation": "/home/ec2-user/ptfe-license.rli",
   "LicenseBootstrapAirgapPackagePath": "/home/ec2-user/${airgap_bundle}",
   "BypassPreflightChecks": true

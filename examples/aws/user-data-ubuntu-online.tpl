@@ -1,7 +1,9 @@
 #!/bin/bash
 
-set -x
+set -ex
 exec > /home/ubuntu/install-ptfe.log 2>&1
+NOW=$(date +"%FT%T")
+echo "[$NOW]  Beginning TFE user_data script."
 
 # Get private and public IPs of the EC2 instance
 PRIVATE_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
@@ -15,7 +17,7 @@ fi
 cat > /etc/replicated.conf <<EOF
 {
   "DaemonAuthenticationType": "password",
-  "DaemonAuthenticationPassword": "${ptfe_admin_password}",
+  "DaemonAuthenticationPassword": "${tfe_admin_password}",
   "TlsBootstrapType": "self-signed",
   "ImportSettingsFrom": "/home/ubuntu/ptfe-settings.json",
   "LicenseFileLocation": "/home/ubuntu/ptfe-license.rli",
@@ -104,14 +106,15 @@ EOF
 # Install the aws CLI
 apt-get -y update
 apt-get install -y awscli
+# pip3 install awscli --upgrade
 aws configure set s3.signature_version s3v4
 
 # Set SELinux to permissive
-apt install -y selinux-utils
-setenforce 0
+apt-get install -qq selinux-utils || true
+setenforce 0 || true
 
 # Install psql slcient for connecting to PostgreSQL
-apt-get install -y postgresql-client
+apt-get install -qq postgresql-client
 
 # Create the PTFE database schemas
 cat > /home/ubuntu/create_schemas.sql <<EOF
@@ -125,9 +128,9 @@ port=$(echo ${pg_netloc} | cut -d ":" -f 2)
 PGPASSWORD=${pg_password} psql -h $host -p $port -d ${pg_dbname} -U ${pg_user} -f /home/ubuntu/create_schemas.sql
 
 # Get License File from S3 bucket
-aws s3 cp s3://${source_bucket_name}/${ptfe_license} /home/ubuntu/ptfe-license.rli
+aws s3 cp s3://${source_bucket_name}/${tfe_license} /home/ubuntu/ptfe-license.rli
 
-# Install PTFE
+# Install TFE
 curl https://install.terraform.io/ptfe/stable > /home/ubuntu/install.sh
 if [ "${public_ip}" == "true" ]; then
   bash /home/ubuntu/install.sh \
@@ -146,9 +149,15 @@ fi
 usermod -aG docker ubuntu
 
 # Check status of install
+NOW=$(date +"%FT%T")
+echo "[$NOW]  Start check of install status ."
+
 while ! curl -ksfS --connect-timeout 5 https://$PRIVATE_IP/_health_check; do
     sleep 15
 done
+
+NOW=$(date +"%FT%T")
+echo "[$NOW]  End check of install status."
 
 # Create initial admin user and organization
 # if they don't exist yet
@@ -168,7 +177,7 @@ EOF
   api_token=$(echo $iact_result | python3 -c "import sys, json; print(json.load(sys.stdin)['token'])")
   echo "API Token of initial admin user is: $api_token"
 
-  # Create first PTFE organization
+  # Create first TFE organization
   cat > /home/ubuntu/initialorg.json <<EOF
 {
   "data": {
@@ -185,3 +194,7 @@ EOF
   org_id=$(echo $org_result | python3 -c "import sys, json; print(json.load(sys.stdin)['data']['id'])")
 
 fi
+
+# end script
+NOW=$(date +"%FT%T")
+echo "[$NOW]  Finished TFE user_data script."

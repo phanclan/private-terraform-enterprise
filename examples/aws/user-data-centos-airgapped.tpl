@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -x
-exec > /home/centos/install-ptfe.log 2>&1
+exec > /home/centos/install-tfe.log 2>&1
 
 # Get private and public IPs of the EC2 instance
 PRIVATE_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
@@ -15,17 +15,17 @@ fi
 cat > /etc/replicated.conf <<EOF
 {
   "DaemonAuthenticationType": "password",
-  "DaemonAuthenticationPassword": "${ptfe_admin_password}",
+  "DaemonAuthenticationPassword": "${tfe_admin_password}",
   "TlsBootstrapType": "self-signed",
-  "ImportSettingsFrom": "/home/centos/ptfe-settings.json",
-  "LicenseFileLocation": "/home/centos/ptfe-license.rli",
+  "ImportSettingsFrom": "/home/centos/tfe-settings.json",
+  "LicenseFileLocation": "/home/centos/tfe-license.rli",
   "LicenseBootstrapAirgapPackagePath": "/home/centos/${airgap_bundle}",
   "BypassPreflightChecks": true
 }
 EOF
 
 # Write out PTFE settings file
-cat > /home/centos/ptfe-settings.json <<EOF
+cat > /home/centos/tfe-settings.json <<EOF
 {
   "hostname": {
     "value": "${hostname}"
@@ -114,19 +114,19 @@ port=$(echo ${pg_netloc} | cut -d ":" -f 2)
 PGPASSWORD=${pg_password} psql -h $host -p $port -d ${pg_dbname} -U ${pg_user} -f /home/centos/create_schemas.sql
 
 # Get License File from S3 bucket
-aws s3 cp s3://${source_bucket_name}/${ptfe_license} /home/centos/ptfe-license.rli
+aws s3 cp s3://${source_bucket_name}/${tfe_license} /home/centos/tfe-license.rli
 
 # Download the Airgap bundle
 aws s3 cp s3://${source_bucket_name}/${airgap_bundle} /home/centos/${airgap_bundle}
 
 # Download and extract the Replicated Bootstrapper
 aws s3 cp s3://${source_bucket_name}/${replicated_bootstrapper} /home/centos/${replicated_bootstrapper}
-mkdir /opt/ptfe-installer
-cp /home/centos/${replicated_bootstrapper} /opt/ptfe-installer/.
-tar xzf /opt/ptfe-installer/${replicated_bootstrapper} -C /opt/ptfe-installer
+mkdir /opt/tfe-installer
+cp /home/centos/${replicated_bootstrapper} /opt/tfe-installer/.
+tar xzf /opt/tfe-installer/${replicated_bootstrapper} -C /opt/tfe-installer
 
 # Install PTFE
-cd /opt/ptfe-installer
+cd /opt/tfe-installer
 if [ "${public_ip}" == "true" ]; then
   ./install.sh \
   airgap \

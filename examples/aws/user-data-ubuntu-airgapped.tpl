@@ -15,7 +15,7 @@ fi
 cat > /etc/replicated.conf <<EOF
 {
   "DaemonAuthenticationType": "password",
-  "DaemonAuthenticationPassword": "${ptfe_admin_password}",
+  "DaemonAuthenticationPassword": "${tfe_admin_password}",
   "TlsBootstrapType": "self-signed",
   "ImportSettingsFrom": "/home/ubuntu/ptfe-settings.json",
   "LicenseFileLocation": "/home/ubuntu/ptfe-license.rli",
@@ -114,7 +114,7 @@ port=$(echo ${pg_netloc} | cut -d ":" -f 2)
 PGPASSWORD=${pg_password} psql -h $host -p $port -d ${pg_dbname} -U ${pg_user} -f /home/ubuntu/create_schemas.sql
 
 # Get License File from S3 bucket
-aws s3 cp s3://${source_bucket_name}/${ptfe_license} /home/ubuntu/ptfe-license.rli
+aws s3 cp s3://${source_bucket_name}/${tfe_license} /home/ubuntu/ptfe-license.rli
 
 # Download the Airgap bundle
 aws s3 cp s3://${source_bucket_name}/${airgap_bundle} /home/ubuntu/${airgap_bundle}

@@ -1,3 +1,3 @@
 output "db_endpoint" {
-  value = "${aws_db_instance.ptfe.endpoint}"
+  value = "${aws_db_instance.tfe.endpoint}"
 }

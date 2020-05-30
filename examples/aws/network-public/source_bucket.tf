@@ -15,6 +15,7 @@ resource "aws_kms_alias" "s3" {
 resource "aws_s3_bucket" "bucket" {
   bucket = var.bucket_name
   acl    = "private"
+  force_destroy = true # [pp] Added this to make easier to destroy for PoC
 
   server_side_encryption_configuration {
     rule {

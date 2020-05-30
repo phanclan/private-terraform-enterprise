@@ -1,6 +1,31 @@
+#------------------------------------------------------------------------------
+# COMMON
+#------------------------------------------------------------------------------
+# variable "friendly_name_prefix" {
+#   type        = string
+#   description = "String value for freindly name prefix for AWS resource names and tags"
+# }
+
+variable "namespace" {
+  # Can have alphanumeric characters and hyphens.
+  # Other characters might be ok but have not been tested
+  description = "Unique name to use for DNS and resource naming"
+}
+
+
+variable "common_tags" {
+  type        = map(string)
+  description = "Map of common tags for taggable AWS resources"
+  default     = {}
+}
+
 variable "aws_region" {
   description = "AWS region"
 }
+
+#------------------------------------------------------------------------------
+# COMPUTE
+#------------------------------------------------------------------------------
 
 variable "aws_instance_ami" {
   # ami-0565af6e282977273 for Ubuntu
@@ -12,7 +37,14 @@ variable "aws_instance_ami" {
 variable "aws_instance_type" {
   # Should be m5.large for POCs
   # Should be m5.xlarge or m5.2xlarge for production
-  description = "EC2 instance type"
+  description = "EC2 instance type for TFE server"
+  default = "m5.large"
+}
+
+variable "create_second_instance" {
+  # Set to 1 if you want a second TFE instance, else 0
+  description = "whether to create second TFE instance"
+  default     = "0"
 }
 
 variable "public_ip" {
@@ -29,17 +61,24 @@ variable "route53_zone" {
   description = "name of Route53 zone to use"
 }
 
+#------------------------------------------------------------------------------
+# DATABASE
+#------------------------------------------------------------------------------
+
 variable "database_storage" {
   # Use 10 for demo, 20 for POC, 50 for production
-  description = "allocated storage for RDS database"
+  description = "Allocated storage (GB) for RDS PostgreSQL database"
   default     = "10"
+}
+
+variable "rds_engine_version" {
+  default = 10.11 # 10.1 from Roger
 }
 
 variable "database_instance_class" {
   # Use db.t2.medium for demo, db.m4.large for POC
   # Use db.m4.large, db.m4.xlarge or db.m4.2xlarge for production
   description = "instance class for RDS database"
-
   default = "db.t2.medium"
 }
 
@@ -49,43 +88,36 @@ variable "database_multi_az" {
   default     = "false"
 }
 
-variable "create_second_instance" {
-  # Set to 1 if you want a second PTFE instance, else 0
-  description = "whether to create second PTFE instance"
-  default     = "0"
-}
-
-variable "namespace" {
-  # Can have alphanumeric characters and hyphens.
-  # Other characters might be ok but have not been tested
-  description = "Unique name to use for DNS and resource naming"
-}
-
 variable "ssh_key_name" {
   # Whatever AWS allows which seems to be any characters
   description = "AWS key pair name to install on the EC2 instance"
 }
 
+#------------------------------------------------------------------------------
+# NETWORK
+#------------------------------------------------------------------------------
+
 variable "vpc_id" {
-  description = "ID of VPC"
-}
-
-# Please include at least 2 subnets from your VPC.
-variable "ptfe_subnet_ids" {
-  # Enter in form "subnet_1,subnet_2"
-  description = "Subnet IDs of subnets for EC2 instances in VPC"
-}
-
-# Please include at least 2 subnets from your VPC.
-# These can be the same as the ptfe_subnet_ids
-variable "db_subnet_ids" {
-  # Enter in form "subnet_1,subnet_2"
-  description = "Subnet IDs of DB subnets in VPC"
+  description = "VPC ID that TFE will be deployed into"
 }
 
 # Please include at least 2 public subnets from your VPC.
-# These can be the same as the ptfe_subnet_ids if public
+# These can be the same as the tfe_subnet_ids if public
 variable "alb_subnet_ids" {
+  # Enter in form "subnet_1,subnet_2"
+  type = list(string)
+  description = "List of subnet IDs for ALB"
+}
+
+# Please include at least 2 subnets from your VPC.
+variable "tfe_subnet_ids" {
+  # Enter in form "subnet_1,subnet_2" [pp] might not be true for 0.12
+  description = "List of subnet IDs for EC2 instances - preferably private"
+}
+
+# Please include at least 2 subnets from your VPC.
+# These can be the same as the tfe_subnet_ids
+variable "db_subnet_ids" {
   # Enter in form "subnet_1,subnet_2"
   description = "Subnet IDs of DB subnets in VPC"
 }
@@ -96,7 +128,7 @@ variable "security_group_id" {
 
 variable "ssl_certificate_arn" {
   # Full ARN of SSL cert
-  description = "ARN of an SSL certificate uploaded to IAM or AWS Certificate Manager for use with PTFE ELB"
+  description = "ARN of an SSL certificate uploaded to IAM or AWS Certificate Manager for use with TFE ELB"
 }
 
 variable "owner" {
@@ -119,15 +151,19 @@ variable "linux" {
   default = "ubuntu"
 }
 
-### Variables for user_data script that installs PTFE
+#------------------------------------------------------------------------------
+# TFE
+#------------------------------------------------------------------------------
 
-variable "ptfe_admin_password" {
+### Variables for user_data script that installs TFE
+
+variable "tfe_admin_password" {
   # Any characters, at least 8 of them
-  description = "password for PTFE admin console (at port 8800)"
+  description = "password for TFE admin console (at port 8800)"
 }
 
 variable "hostname" {
-  description = "the DNS hostname you will use to access PTFE"
+  description = "the DNS hostname you will use to access TFE"
   default     = ""
 }
 
@@ -139,7 +175,7 @@ variable "ca_certs" {
 
 variable "installation_type" {
   # This can be "poc" or "production"
-  description = "PTFE deployment mode"
+  description = "TFE deployment mode"
   default     = "production"
 }
 
@@ -164,7 +200,7 @@ variable "enc_password" {
 }
 
 variable "enable_metrics_collection" {
-  description = "whether PTFE's internal metrics collection should be enabled"
+  description = "whether TFE's internal metrics collection should be enabled"
   default     = "true"
 }
 
@@ -176,7 +212,7 @@ variable "extra_no_proxy" {
 variable "pg_dbname" {
   # Up to 63 alphanumeric characters
   description = "Name of PostgreSQL database"
-  default     = "ptfe"
+  default     = "tfe"
 }
 
 variable "pg_extra_params" {
@@ -193,7 +229,7 @@ variable "pg_password" {
 variable "pg_user" {
   # Can only contain alphanumeric characters, at least 8 of them
   description = "Name of PostgreSQL database user"
-  default     = "ptfe"
+  default     = "tfe"
 }
 
 variable "placement" {
@@ -209,7 +245,7 @@ variable "aws_instance_profile" {
 }
 
 variable "s3_bucket" {
-  # Name of the PTFE runtime bucket that should be created
+  # Name of the TFE runtime bucket that should be created
   description = "Name of the S3 bucket"
 }
 
@@ -250,13 +286,13 @@ variable "custom_image_tag" {
 }
 
 variable "source_bucket_name" {
-  # Name of the source PTFE bucket (not the ARN)
-  description = "Name of the S3 PTFE source bucket containing PTFE license file, airgap bundle, replicated tar file, and settings files"
+  # Name of the source TFE bucket (not the ARN)
+  description = "Name of the S3 TFE source bucket containing TFE license file, airgap bundle, replicated tar file, and settings files"
 }
 
-variable "ptfe_license" {
-  # NAme of the S3 PTFE source bucket object containing
-  # the PTFE license
+variable "tfe_license" {
+  # NAme of the S3 TFE source bucket object containing
+  # the TFE license
   description = "key of license file within the source S3 bucket"
 }
 
@@ -267,7 +303,7 @@ variable "operational_mode" {
 }
 
 variable "airgap_bundle" {
-  # Name of the S3 PTFE source bucket object containing
+  # Name of the S3 TFE source bucket object containing
   # the airgap bundle
   description = "S3 bucket object container airgap bundle"
 
@@ -275,7 +311,7 @@ variable "airgap_bundle" {
 }
 
 variable "replicated_bootstrapper" {
-  # Name of the S3 PTFE source bucket object containing
+  # Name of the S3 TFE source bucket object containing
   # the replicated bootstrapper (replicated.tar.gz)
   description = "S3 bucket object containing replicated bootstrapper replicated.tar.gz"
 
@@ -289,23 +325,24 @@ variable "create_first_user_and_org" {
 
 variable "initial_admin_username" {
   # alphanumeric, at least 8 characters
-  description = "username of initial site admin user in PTFE"
+  description = "username of initial site admin user in TFE"
 }
 
 variable "initial_admin_email" {
-  description = "email of initial site admin user in PTFE"
+  description = "email of initial site admin user in TFE"
 }
 
 variable "initial_admin_password" {
   # any characters, at least 8 of them
-  description = "username of initial site admin user in PTFE"
+  description = "username of initial site admin user in TFE"
 }
 
 variable "initial_org_name" {
   # alphanumeric and hyphens
-  description = "name of initial organization in PTFE"
+  description = "name of initial organization in TFE"
 }
 
 variable "initial_org_email" {
-  description = "email of initial organization in PTFE"
+  description = "email of initial organization in TFE"
 }
+

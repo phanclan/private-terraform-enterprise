@@ -15,12 +15,12 @@ database_storage = "10"
 database_instance_class = "db.t2.medium"
 # Use "false" for demo, "true" for POC and Production
 database_multi_az = "false"
-# Set to 1 if you want a second PTFE instance, else 0
+# Set to 1 if you want a second TFE instance, else 0
 create_second_instance = "0"
 namespace = ""
 ssh_key_name = ""
 vpc_id = ""
-ptfe_subnet_ids = "" # in format "subnet-1,subnet-2" (no space)
+tfe_subnet_ids = "" # in format "subnet-1,subnet-2" (no space)
 db_subnet_ids = "" # in format "subnet-1,subnet-2" (no space)
 alb_subnet_ids = "" # in format "subnet-1,subnet-2" (no space)
 security_group_id = ""
@@ -28,9 +28,9 @@ ssl_certificate_arn = ""
 owner = ""
 ttl = ""
 source_bucket_name = ""
-ptfe_license = ""
+tfe_license = ""
 linux = "centos"
-ptfe_admin_password = ""
+tfe_admin_password = ""
 hostname = ""
 enc_password = ""
 extra_no_proxy = ""

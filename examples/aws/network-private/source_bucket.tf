@@ -3,7 +3,7 @@ resource "aws_kms_key" "s3" {
   deletion_window_in_days = 10
 
   tags {
-    name = "ptfe-s3-bucket-key"
+    name = "tfe-s3-bucket-key"
   }
 }
 

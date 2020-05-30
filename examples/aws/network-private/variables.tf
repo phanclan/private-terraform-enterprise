@@ -7,7 +7,7 @@ variable "namespace" {
 }
 
 variable "bucket_name" {
-  description = "Name of the PTFE source bucket to create"
+  description = "Name of the TFE source bucket to create"
 }
 
 variable "cidr_block" {

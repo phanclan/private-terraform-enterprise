@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -x
-exec > /home/centos/install-ptfe.log 2>&1
+exec > /home/centos/install-tfe.log 2>&1
 
 # Get private and public IPs of the EC2 instance
 PRIVATE_IP=$(curl http://169.254.169.254/latest/meta-data/local-ipv4)
@@ -15,16 +15,16 @@ fi
 cat > /etc/replicated.conf <<EOF
 {
   "DaemonAuthenticationType": "password",
-  "DaemonAuthenticationPassword": "${ptfe_admin_password}",
+  "DaemonAuthenticationPassword": "${tfe_admin_password}",
   "TlsBootstrapType": "self-signed",
-  "ImportSettingsFrom": "/home/centos/ptfe-settings.json",
-  "LicenseFileLocation": "/home/centos/ptfe-license.rli",
+  "ImportSettingsFrom": "/home/centos/tfe-settings.json",
+  "LicenseFileLocation": "/home/centos/tfe-license.rli",
   "BypassPreflightChecks": true
 }
 EOF
 
 # Write out PTFE settings file
-cat > /home/centos/ptfe-settings.json <<EOF
+cat > /home/centos/tfe-settings.json <<EOF
 {
   "hostname": {
     "value": "${hostname}"
@@ -110,7 +110,7 @@ pip install awscli --upgrade --user
 aws configure set s3.signature_version s3v4
 
 # Get License File from S3 bucket
-aws s3 cp s3://${source_bucket_name}/${ptfe_license} /home/centos/ptfe-license.rli
+aws s3 cp s3://${source_bucket_name}/${tfe_license} /home/centos/tfe-license.rli
 
 # Set SELinux to permissive
 setenforce 0
