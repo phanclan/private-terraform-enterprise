@@ -1,11 +1,3 @@
-terraform {
-  required_version = ">= 0.12.6"
-}
-
-provider "aws" {
-  region = var.aws_region
-}
-
 data "aws_availability_zones" "available" {
   state = "available"
 }
@@ -41,8 +33,8 @@ resource "aws_route_table" "main" {
 }
 
 locals {
-  segmented_cidr = "${split("/", var.cidr_block)}"
-  address        = "${split(".", local.segmented_cidr[0])}"
+  segmented_cidr = split("/", var.cidr_block)
+  address        = split(".", local.segmented_cidr[0])
   bits           = local.segmented_cidr[1]
 }
 
@@ -110,5 +102,9 @@ resource "aws_security_group" "main" {
     from_port   = 0
     to_port     = 0
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.namespace}-security-group-public"
   }
 }
